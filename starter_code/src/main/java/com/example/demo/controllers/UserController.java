@@ -8,6 +8,7 @@ import com.example.demo.model.requests.CreateUserRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,6 +35,7 @@ public class UserController {
         return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
     }
 
+    @Transactional
     @PostMapping("/create")
     public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
         User user = new User();
@@ -45,7 +47,7 @@ public class UserController {
             return ResponseEntity.badRequest().build();
         }
         user.setPassword(passwordEncoder.encode(createUserRequest.getPassword()));
-        cartRepository.save(cart);
+//        cartRepository.save(cart);
         user.setCart(cart);
         userRepository.save(user);
         return ResponseEntity.ok(user);

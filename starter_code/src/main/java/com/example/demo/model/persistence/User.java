@@ -42,6 +42,7 @@ public class User {
 
     public void setCart(Cart cart) {
         this.cart = cart;
+        cart.setUser(this);
     }
 
     public long getId() {

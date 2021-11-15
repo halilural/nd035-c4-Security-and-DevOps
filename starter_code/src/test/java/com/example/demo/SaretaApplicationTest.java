@@ -36,6 +36,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     private static String USER_URL;
     private static String CART_URL;
 
+    private static final String PASSWORD = "12345678";
 
     @Autowired
     UserController userController;
@@ -49,7 +50,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     TestRestTemplate restTemplate;
 
     @BeforeClass
-    public void beforeClass(){
+    public void beforeClass() {
         restTemplate = new TestRestTemplate();
         BASE_URL = "http://localhost:" + port + "/";
         LOGIN_URL = BASE_URL + "login";
@@ -58,36 +59,37 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test
-    public void canCreateUser(){
+    public void canCreateUser() {
         CreateUserRequest req = new CreateUserRequest();
         req.setUsername("canCreateUserTest");
-        req.setPassword("1234");
-        req.setConfirmPassword("1234");
+        req.setPassword(PASSWORD);
+        req.setConfirmPassword(PASSWORD);
         ResponseEntity<User> res = userController.createUser(req);
         System.out.println("password:" + res.getBody().getPassword());
         Assert.assertTrue(res.getBody().getId() > 0);
         Assert.assertTrue(res.getStatusCode().is2xxSuccessful());
     }
 
-    @Test(expectedExceptions = { UnsupportedOperationException.class }, expectedExceptionsMessageRegExp = ".*password.*")
-    public void canDetectWrongConfirmPasswordWhenCreatingUser(){
+    @Test
+    public void canDetectWrongConfirmPasswordWhenCreatingUser() {
         CreateUserRequest req = new CreateUserRequest();
         req.setUsername("canCreateUserTest");
-        req.setPassword("1234");
-        req.setConfirmPassword("4321");
+        req.setPassword(PASSWORD);
+        req.setConfirmPassword(PASSWORD + "9");
         ResponseEntity<User> res = userController.createUser(req);
+        Assert.assertTrue(res.getStatusCode() == HttpStatus.BAD_REQUEST);
     }
 
-//    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    //    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     @Test
-    public void canLogin(){
+    public void canLogin() {
         createUser("canLoginTest");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map body = new HashMap();
         body.put("username", "canLoginTest");
-        body.put("password", "1234");
+        body.put("password", PASSWORD);
 
         HttpEntity entity = new HttpEntity(body, headers);
 
@@ -97,7 +99,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
         Assert.assertTrue(res.getHeaders().containsKey("Authorization"));
     }
 
-//    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    //    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     @Test
     public void canLoginViaHelper() throws InterruptedException {
         String token = createAndLogin("canLoginViaHelperTest");
@@ -106,7 +108,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test
-    public void canBlockInvalidLogin(){
+    public void canBlockInvalidLogin() {
         HttpEntity entity = new RequestBuilder()
                 .addBodyProperty("username", "invalid_user")
                 .addBodyProperty("password", "invalid_pass")
@@ -114,7 +116,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
         ResponseEntity res = restTemplate.postForEntity(LOGIN_URL, entity, Object.class);
         Assert.assertTrue(res.getStatusCode().is4xxClientError());
-        Assert.assertEquals(res.getStatusCode(), HttpStatus.UNAUTHORIZED);
+        Assert.assertEquals(res.getStatusCode(), HttpStatus.FORBIDDEN);
         Assert.assertFalse(res.getHeaders().containsKey("Authorization"));
     }
 
@@ -127,7 +129,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
                 .build();
         ResponseEntity res = restTemplate.exchange(url, HttpMethod.GET, entity, User.class);
         System.out.println(res.getStatusCode());
-        Assert.assertEquals(res.getStatusCode(), HttpStatus.UNAUTHORIZED);
+        Assert.assertEquals(res.getStatusCode(), HttpStatus.FORBIDDEN);
 
 
         // should allow if token present
@@ -140,31 +142,31 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     }
 
     @DataProvider(name = "pagesNeededAuth")
-    public Object[][] pagesNeededAuth(){
+    public Object[][] pagesNeededAuth() {
         return new Object[][]{
-                { USER_URL + "canGetPagesAfterLogin", "canGetPagesAfterLogin" },
-                { USER_URL + "canGetPageByUsername", "canGetPageByUsername" },
-                { USER_URL + "id/2", "canGetUserDetailById2" },
-                { USER_URL + "id/3", "canGetUserDetailById3" },
-                { USER_URL + "id/4", "canGetUserDetailById4" },
-                { USER_URL + "id/5", "canGetUserDetailById5" },
-                { USER_URL + "id/6", "canGetUserDetailById6" },
-                { USER_URL + "id/7", "canGetUserDetailById7" },
-                { USER_URL + "id/8", "canGetUserDetailById8" },
-                { USER_URL + "id/9", "canGetUserDetailById9" },
-                { USER_URL + "id/10", "canGetUserDetailById10" },
+                {USER_URL + "canGetPagesAfterLogin", "canGetPagesAfterLogin"},
+                {USER_URL + "canGetPageByUsername", "canGetPageByUsername"},
+                {USER_URL + "id/2", "canGetUserDetailById2"},
+                {USER_URL + "id/3", "canGetUserDetailById3"},
+                {USER_URL + "id/4", "canGetUserDetailById4"},
+                {USER_URL + "id/5", "canGetUserDetailById5"},
+                {USER_URL + "id/6", "canGetUserDetailById6"},
+                {USER_URL + "id/7", "canGetUserDetailById7"},
+                {USER_URL + "id/8", "canGetUserDetailById8"},
+                {USER_URL + "id/9", "canGetUserDetailById9"},
+                {USER_URL + "id/10", "canGetUserDetailById10"},
         };
     }
 
     @Test
-    public void canCreateUserViaRest(){
+    public void canCreateUserViaRest() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, String> body = new HashMap<>();
         body.put("username", "rest_user");
-        body.put("password", "1234");
-        body.put("confirmPassword", "1234");
+        body.put("password", PASSWORD);
+        body.put("confirmPassword", PASSWORD);
         String url = USER_URL + "create";
         System.out.println(url);
 
@@ -175,11 +177,11 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
         Assert.assertTrue(res.getStatusCode().is2xxSuccessful());
     }
 
-    private User createUser(String username){
+    private User createUser(String username) {
         CreateUserRequest req = new CreateUserRequest();
         req.setUsername(username);
-        req.setPassword("1234");
-        req.setConfirmPassword("1234");
+        req.setPassword(PASSWORD);
+        req.setConfirmPassword(PASSWORD);
         ResponseEntity<User> res = userController.createUser(req);
         return (User) res.getBody();
     }
@@ -192,7 +194,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
         Map body = new HashMap();
         body.put("username", username);
-        body.put("password", "1234");
+        body.put("password", PASSWORD);
 
         HttpEntity entity = new HttpEntity(body, headers);
 
@@ -211,13 +213,13 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
     /*  Cart Controller */
     @Test
-    public void canAddToCart(){
+    public void canAddToCart() {
         // before auth
         String addToCartUrl = CART_URL + "/addToCart";
 
         ResponseEntity<Object> res = restTemplate.getForEntity(addToCartUrl, Object.class);
         System.out.println(res.getStatusCode());
-        Assert.assertTrue(res.getStatusCode() == HttpStatus.UNAUTHORIZED);
+        Assert.assertTrue(res.getStatusCode() == HttpStatus.FORBIDDEN);
 
         // after auth
         String auth = createAndLogin("canAddToCart");
@@ -230,13 +232,13 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test
-    public void canRemoveFromCart(){
+    public void canRemoveFromCart() {
         String url = CART_URL + "/removeFromCart";
 
         // before auth
         ResponseEntity<Object> res = restTemplate.getForEntity(url, Object.class);
         System.out.println(res.getStatusCode());
-        Assert.assertTrue(res.getStatusCode() == HttpStatus.UNAUTHORIZED);
+        Assert.assertTrue(res.getStatusCode() == HttpStatus.FORBIDDEN);
 
         // after auth
         String auth = createAndLogin("canRemoveFromCart");
@@ -249,7 +251,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
     }
 
     @Test
-    public void canModifyCartViaController(){
+    public void canModifyCartViaController() {
         String username = "canAddToCartViaController";
 
         User u = createUser(username);
@@ -277,7 +279,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
     /*  OrderController */
     @Test
-    public void canSubmitOrder(){
+    public void canSubmitOrder() {
 
         String ORDER_URL = BASE_URL + "api/order";
         String username = "canAccessOrder";
@@ -291,8 +293,8 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
         ResponseEntity fail2 = restTemplate.postForEntity(submitUrl, entity, Object.class);
 
         // should block without auth
-        Assert.assertEquals(fail1.getStatusCode(), HttpStatus.UNAUTHORIZED);
-        Assert.assertEquals(fail2.getStatusCode(), HttpStatus.UNAUTHORIZED);
+        Assert.assertEquals(fail1.getStatusCode(), HttpStatus.FORBIDDEN);
+        Assert.assertEquals(fail2.getStatusCode(), HttpStatus.FORBIDDEN);
 
         String auth = createAndLogin(username);
         HttpEntity authedEntity = new RequestBuilder()
