@@ -1,2 +1,4 @@
 .idea/
 starter_code/auth-course.iml
+starter_code/logs/app.log
+starter_code/target
