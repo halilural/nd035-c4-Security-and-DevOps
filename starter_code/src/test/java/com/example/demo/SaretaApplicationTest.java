@@ -116,7 +116,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
         ResponseEntity res = restTemplate.postForEntity(LOGIN_URL, entity, Object.class);
         Assert.assertTrue(res.getStatusCode().is4xxClientError());
-        Assert.assertEquals(res.getStatusCode(), HttpStatus.FORBIDDEN);
+        Assert.assertEquals(res.getStatusCode(), HttpStatus.UNAUTHORIZED);
         Assert.assertFalse(res.getHeaders().containsKey("Authorization"));
     }
 
@@ -129,7 +129,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
                 .build();
         ResponseEntity res = restTemplate.exchange(url, HttpMethod.GET, entity, User.class);
         System.out.println(res.getStatusCode());
-        Assert.assertEquals(res.getStatusCode(), HttpStatus.FORBIDDEN);
+        Assert.assertEquals(res.getStatusCode(), HttpStatus.UNAUTHORIZED);
 
 
         // should allow if token present
@@ -219,7 +219,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
 
         ResponseEntity<Object> res = restTemplate.getForEntity(addToCartUrl, Object.class);
         System.out.println(res.getStatusCode());
-        Assert.assertTrue(res.getStatusCode() == HttpStatus.FORBIDDEN);
+        Assert.assertTrue(res.getStatusCode() == HttpStatus.UNAUTHORIZED);
 
         // after auth
         String auth = createAndLogin("canAddToCart");
@@ -238,7 +238,7 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
         // before auth
         ResponseEntity<Object> res = restTemplate.getForEntity(url, Object.class);
         System.out.println(res.getStatusCode());
-        Assert.assertTrue(res.getStatusCode() == HttpStatus.FORBIDDEN);
+        Assert.assertTrue(res.getStatusCode() == HttpStatus.UNAUTHORIZED);
 
         // after auth
         String auth = createAndLogin("canRemoveFromCart");
@@ -290,11 +290,9 @@ public class SaretaApplicationTest extends AbstractTestNGSpringContextTests {
                 .build();
 
         ResponseEntity fail1 = restTemplate.getForEntity(getHistoryUrl, Object.class);
-        ResponseEntity fail2 = restTemplate.postForEntity(submitUrl, entity, Object.class);
 
         // should block without auth
-        Assert.assertEquals(fail1.getStatusCode(), HttpStatus.FORBIDDEN);
-        Assert.assertEquals(fail2.getStatusCode(), HttpStatus.FORBIDDEN);
+        Assert.assertEquals(fail1.getStatusCode(), HttpStatus.UNAUTHORIZED);
 
         String auth = createAndLogin(username);
         HttpEntity authedEntity = new RequestBuilder()
